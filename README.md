@@ -1,6 +1,7 @@
 
 # 🩺 Multilingual Medical Support Chatbot
-## 📌 Project Overview **Multilingual Medical Support Chatbot** is an **AI-driven healthcare assistant** that understands user queries in any language, provides medically accurate responses using a **fine-tuned Flan-T5 model**, and translates answers back to the user’s language via a **Streamlit interface**. The goal is to **improve healthcare accessibility** by providing multilingual support, symptom guidance, and basic health awareness content.
+## 📌 Project Overview 
+**Multilingual Medical Support Chatbot** is an **AI-driven healthcare assistant** that understands user queries in any language, provides medically accurate responses using a **fine-tuned Flan-T5 model**, and translates answers back to the user’s language via a **Streamlit interface**. The goal is to **improve healthcare accessibility** by providing multilingual support, symptom guidance, and basic health awareness content.
 ---
 
 ## **Project Structure**
