@@ -8,6 +8,8 @@
 
 ---
 
+    https://huggingface.co/spaces/Rajeev8248/medical-multilingual-chatbot
+
 
 ## **Project Structure**
 
