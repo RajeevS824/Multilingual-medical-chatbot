@@ -1,0 +1,10 @@
+streamlit
+transformers
+torch
+googletrans==4.0.0-rc1
+datasets
+sentencepiece
+huggingface_hub
+regex
+# MarianMT dependencies (included via transformers)
+sacremoses
