@@ -62,26 +62,101 @@ multilingual-medical-chatbot/
 
 ```python
 # app.py
+# ========================================================== 
+# 🩺 Multilingual Medical Support Chatbot with Custom UI(app.py)
 # ==========================================================
-# 🩺 Multilingual Medical Support Chatbot with Streamlit
-# ==========================================================
-
 import streamlit as st
+import os
+from pathlib import Path
+import base64
 from utils import (
     load_model_and_tokenizer,
     clean_text,
     detect_language,
     translate_text,
     generate_medical_response,
+    is_medical_query
 )
 
 # ==========================================================
-# Page Config
+# 1️⃣ Page Config
 # ==========================================================
 st.set_page_config(page_title="🩺 Multilingual Medical Assistant", layout="centered")
 
+# Safe image path resolution
+image_path = Path(__file__).parent / "hospital.jpg"
+
+# Convert to base64
+if image_path.exists():
+    with open(image_path, "rb") as f:
+        encoded_image = base64.b64encode(f.read()).decode()
+else:
+    encoded_image = ""
+
+# Inject CSS with the background image
+st.markdown(f"""
+    <style>
+        [class*="stAppViewContainer"] {{
+            background: linear-gradient(rgba(210, 235, 250, 0.85), rgba(210, 235, 250, 0.85)), 
+                        url(data:image/jpg;base64,{encoded_image});
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+        }}
+        body, [class*="stMain"] {{
+            color: #2C3E50 !important;
+        }}
+        .title {{
+            text-align: center;
+            font-size: 30px;
+            font-weight: bold;
+            color: #1A5276;
+            margin-top: 10px;
+        }}
+        .subtitle {{
+            text-align: center;
+            font-size: 16px;
+            color: #7F8C8D;
+            margin-bottom: 25px;
+        }}
+        .chat-box {{
+            background-color: rgba(210, 235, 250, 0.85);
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+            padding: 25px;
+            margin: 20px auto;
+            width: 80%;
+        }}
+        .stTextArea textarea {{
+            border-radius: 25px !important;
+            padding: 10px 20px !important;
+            font-size: 15px;
+            border: 1px solid #D0D3D4 !important;
+        }}
+        .stButton button {{
+            background-color: #3498DB !important;
+            color: white !important;
+            border-radius: 25px !important;
+            padding: 8px 20px !important;
+            font-size: 14px !important;
+            border: none !important;
+        }}
+        .stButton button:hover {{
+            background-color: #2E86C1 !important;
+        }}
+    </style>
+""", unsafe_allow_html=True)
+
+
+
 # ==========================================================
-# Load Model & Tokenizer
+# 🏥 Header
+# ==========================================================
+st.markdown('<div class="title">MULTILINGUAL MEDICAL ASSISTANT</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitle">How can I help you ?</div>', unsafe_allow_html=True)
+
+# ==========================================================
+# 2️⃣ Load Model & Tokenizer
 # ==========================================================
 @st.cache_resource(show_spinner=True)
 def load_model():
@@ -91,62 +166,226 @@ def load_model():
 tokenizer, model, device = load_model()
 
 # ==========================================================
-# Header
+# 3️⃣ Initialize chat history
 # ==========================================================
-st.markdown("<h1 style='text-align:center;color:#1A5276;'>MULTILINGUAL MEDICAL ASSISTANT</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align:center;color:#7F8C8D;'>How can I help you?</p>", unsafe_allow_html=True)
+if "chat_history" not in st.session_state:
+    st.session_state["chat_history"] = []
 
 # ==========================================================
-# Chat Logic
+# 4️⃣ Function to clear text & chat history
 # ==========================================================
-def get_chatbot_response(query):
-    """Reusable chatbot logic"""
-    cleaned = clean_text(query)
-    lang = detect_language(cleaned)
-    text_en = translate_text(cleaned, src=lang, dest="en") if lang != "en" else cleaned
+def clear_text():
+    st.session_state["query"] = ""
+    st.session_state["chat_history"] = []
 
-    prompt = (
-        "You are a professional medical assistant. "
-        "Provide detailed explanation including causes, symptoms, diagnosis, treatments, and recommendations. "
-        "Do not provide emergency advice; recommend consulting a doctor if needed. "
-        f"Question: {text_en}\nAnswer:"
+# ==========================================================
+# 💬 Chat Section 
+# ==========================================================
+
+with st.container():
+    st.markdown(
+        """
+        <div class="chat-box" style="text-align: center;">
+            <img src="https://cdn-icons-png.flaticon.com/512/387/387561.png" width="70" style="border-radius: 50%; margin-bottom: 10px;">
+            <p style="font-weight: 600; color: #2C3E50; font-size: 16px;">Hello! I'm here to assist you.</p>
+            <p style="color: #7F8C8D; font-size: 15px; margin-bottom: 15px;">Please type your query below 👇</p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+    for entry in st.session_state["chat_history"]:
+        user_msg = entry.get("user")
+        bot_msg = entry.get("bot")
+        
+        if user_msg:
+            st.markdown(
+        f"""
+        <div style="
+            display: flex; justify-content: flex-end; margin: 10px 0;
+        ">
+            <div style="
+                background-color: rgba(52, 152, 219, 0.15); 
+                color: #2C3E50; 
+                padding: 12px 18px; 
+                border-radius: 20px 20px 0px 20px; 
+                max-width: 90%;
+                word-wrap: break-word;
+                font-size: 15px;
+            ">
+                👤 You: {user_msg}
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
-    response_en = generate_medical_response(prompt, tokenizer, model, device)
-    final_response = translate_text(response_en, src="en", dest=lang) if lang != "en" else response_en
-    return final_response, response_en, lang
+        if bot_msg:
+            st.markdown(
+        f"""
+        <div style="
+            display: flex; justify-content: flex-start; margin: 10px 0;
+        ">
+            <div style="
+                background-color: rgba(46, 204, 113, 0.15); 
+                color: #2C3E50; 
+                padding: 12px 18px; 
+                border-radius: 20px 20px 20px 0px; 
+                max-width: 90%;
+                word-wrap: break-word;
+                font-size: 15px;
+            ">
+                🩺 Assistant: {bot_msg}
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 # ==========================================================
-# Streamlit UI
+# 6️⃣ User Input
 # ==========================================================
-query = st.text_area("Enter your health-related query here...")
+query = st.text_area(
+    " ",
+    value=st.session_state.get("query", ""),
+    placeholder="Enter your health-related query here...",
+    key="query"
+)
 
-col1, col2 = st.columns(2)
-with col1:
-    if st.button("🩺 Get Response"):
-        if not query.strip():
-            st.error("Please enter a query first.")
-        else:
-            with st.spinner("Generating response..."):
-                final_response, response_en, lang = get_chatbot_response(query)
-            st.info("### 🧠 Response")
-            st.write(final_response)
-            if lang != "en":
-                st.divider()
-                st.info("### English Response")
-                st.write(response_en)
 
-with col2:
-    if st.button("Clear"):
-        query = ""
-        st.session_state["query"] = ""
+# ==========================================================
+# Action Buttons
+# ==========================================================
 
-# Disclaimer
 st.markdown("""
-<p style="font-size:15px; color:black; text-align:center;">
-⚠️ <strong>Disclaimer:</strong> This chatbot is for educational purposes only. Not a substitute for professional medical advice.
-</p>
+    <style>
+        /* Flex container for buttons */
+        .button-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 80%;
+            margin: 20px auto;
+        }
+        /* Common button styling */
+        .stButton > button {
+            border-radius: 25px !important;
+            padding: 10px 25px !important;
+            font-size: 15px !important;
+            border: none !important;
+            cursor: pointer !important;
+        }
+        /* Submit button (left) */
+        .submit-btn button {
+            background-color: #3498DB !important;
+            color: white !important;
+        }
+        .submit-btn button:hover {
+            background-color: #2E86C1 !important;
+        }
+        /* Clear button (right) */
+        .clear-btn button {
+            background-color: #E74C3C !important;
+            color: white !important;
+        }
+        .clear-btn button:hover {
+            background-color: #C0392B !important;
+        }
+    </style>
 """, unsafe_allow_html=True)
+
+# Create the two buttons in the same visual row
+st.markdown('<div class="button-row">', unsafe_allow_html=True)
+
+col_submit, col_clear = st.columns([1, 1], gap="large")
+with col_submit:
+    submit_clicked = st.button("🩺 Get Response", key="submit", use_container_width=True)
+with col_clear:
+    clear_clicked = st.button("Clear", key="clear", use_container_width=True, on_click=clear_text)
+
+st.markdown('</div>', unsafe_allow_html=True)
+
+
+# ==========================================================
+#  Chatbot Logic 
+# ==========================================================
+detected_lang = "en"
+response_en = ""
+final_response = "🫀 Please ask a health or medically related question."
+
+if submit_clicked:
+    if not query.strip():
+        st.error("Please enter a query first.")
+    else:
+        cleaned = clean_text(query)
+        detected_lang = detect_language(cleaned)
+
+        # 🔹 Step 1: Translate non-English input to English for keyword detection
+        if detected_lang != "en":
+            cleaned_en = translate_text(cleaned, src=detected_lang, dest="en")
+        else:
+            cleaned_en = cleaned
+
+        # 🔹 Step 2: Check if translated text is medical
+        if not is_medical_query(cleaned_en):
+            final_response = "🫀 Please ask a health or medically related question."
+        else:
+            try:
+                # 🔹 Step 3: Prepare the medical prompt
+                prompt = (
+                    "You are a helpful and professional medical assistant. "
+                    "Provide a short, clear, and accurate answer to the user's question. "
+                    "If relevant, briefly mention key symptoms and treatments in 3 sentences. "
+                    "Focus only on health-related questions. "
+                    "If the query is not medical, respond politely asking for a medical question. "
+                    "Do not give emergency advice; recommend consulting a doctor if needed.\n"
+                    "Do not introduce yourself; go straight to the answer.\n"
+                    f"Question: {cleaned_en}\nAnswer:"
+                )
+
+                # 🔹 Step 4: Generate response with model
+                with st.spinner("💬 Generating medical response... Please wait"):
+                    response_en = generate_medical_response(
+                        prompt, tokenizer, model, device, max_new_tokens=180
+                    )
+
+                # 🔹 Step 5: Translate response back to original language if needed
+                final_response = (
+                    translate_text(response_en, src="en", dest=detected_lang)
+                    if detected_lang != "en"
+                    else response_en
+                )
+
+            except Exception as e:
+                final_response = "Sorry, I cannot provide a response now. Please consult a medical professional."
+
+        # 🔹 Step 6: Save chat history and display
+        st.session_state["chat_history"].append({
+            "user": query,
+            "bot": final_response
+        })
+
+        st.info("### 🧠 Smart Response")
+        st.write(final_response)
+
+        # 🔹 Step 7: Show English response for reference
+        if detected_lang != "en":
+            st.divider()
+            st.info("### English Response")
+            st.write(response_en)
+
+# ⚠️ Disclaimer
+st.markdown("""
+<p style="font-size:15px; color:black; text-align:center; margin: 30px 40px 20px 40px;">
+⚠️ <strong>Disclaimer:</strong> This chatbot is for educational and informational purposes only.<br> 
+It is not a substitute for professional diagnosis.</p>""",
+unsafe_allow_html=True)
+
+
+# venv\Scripts\activate
+# ==========================================================
+# Run Command (for reference)
+# ==========================================================
+# python -m streamlit run app.py
 ```
 
 ---
@@ -154,74 +393,147 @@ st.markdown("""
 ## **2️⃣ utils.py**
 
 ```python
-# utils.py
 # ==========================================================
-# Helper functions for Multilingual Medical Chatbot
+# utils.py — Helper Functions for Multilingual Medical Chatbot
 # ==========================================================
-
 import re
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM,MarianMTModel, MarianTokenizer
 import torch
 from googletrans import Translator
 
 _TRANSLATOR = Translator()
-MODEL_NAME = "MBZUAI/LaMini-Flan-T5-783M"
 
+# Tuned Model
+# MODEL_NAME = "./medical_flan_t5_final_8"
+MODEL_NAME = "./medical_flan_t5_final"
+
+# ==========================================================
+# 🩺 Medical Vocabulary 
+# ==========================================================
 def load_model_and_tokenizer(model_name: str = MODEL_NAME):
+    """Load model and tokenizer from Hugging Face."""
     device = "cuda" if torch.cuda.is_available() else "cpu"
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
     model.to(device)
     return tokenizer, model, device
 
+def is_medical_query(text: str) -> bool:
+    """Check if the query contains at least one medical-related word."""
+    words = set(re.sub(r'[^a-zA-Z0-9\s]', '', text.lower()).split())
+    return len(MEDICAL_KEYWORDS.intersection(words)) > 0
+
 def clean_text(text: str) -> str:
-    """Normalize text"""
+    """Basic cleaning for text normalization."""
     text = text.strip()
     text = re.sub(r"\s+", " ", text)
     return text
 
 def detect_language(text: str) -> str:
-    """Detect input language"""
+    """Detect input language using Google Translate."""
     try:
         return _TRANSLATOR.detect(text).lang
-    except:
+    except Exception:
         return "en"
 
-def translate_text(text: str, src: str = None, dest: str = "en") -> str:
-    """Translate text between languages"""
+# Load Marian models dynamically (only when needed)
+_MARIAN_MODELS = {}
+
+def load_marian_model(src_lang: str, dest_lang: str):
+    """Load MarianMT model for the given language pair (with caching)."""
+    key = f"{src_lang}-{dest_lang}"
+    if key in _MARIAN_MODELS:
+        return _MARIAN_MODELS[key]
+
+    model_name = f"Helsinki-NLP/opus-mt-{src_lang}-{dest_lang}"
     try:
+        tokenizer = MarianTokenizer.from_pretrained(model_name)
+        model = MarianMTModel.from_pretrained(model_name)
+        _MARIAN_MODELS[key] = (tokenizer, model)
+    except Exception as e:
+        print(f"[ERROR] Failed to load Marian model '{model_name}': {e}")
+        _MARIAN_MODELS[key] = None
+    return _MARIAN_MODELS[key]
+
+
+def marian_translate(text: str, src: str, dest: str = "en") -> str:
+    """Offline translation using MarianMT."""
+    pair = load_marian_model(src, dest)
+    if pair is None:
+        return text  # if model not found, fallback to raw text
+    tokenizer, model = pair
+    batch = tokenizer([text], return_tensors="pt", padding=True)
+    gen = model.generate(**batch, max_new_tokens=200)
+    return tokenizer.decode(gen[0], skip_special_tokens=True)
+
+def translate_text(text: str, src: str = None, dest: str = "en") -> str:
+    """Translate text using Google Translate first, then fallback to MarianMT if it fails."""
+    try:
+        # Primary: Google Translate
         if src:
             return _TRANSLATOR.translate(text, src=src, dest=dest).text
         return _TRANSLATOR.translate(text, dest=dest).text
+    except Exception as e:
+        print(f"[WARN] Google Translate failed ({e}). Switching to MarianMT fallback...")
+
+    # Fallback: MarianMT (offline)
+    try:
+        src_lang = src or detect_language(text)  # auto-detect source if missing
+        src_lang = src_lang.split("-")[0]  # normalize (e.g., 'en-US' -> 'en')
+        dest_lang = dest.split("-")[0]
+        return marian_translate(text, src_lang, dest_lang)
+    except Exception as e:
+        print(f"[ERROR] MarianMT translation failed: {e}")
+        return f"[Translation unavailable] {text}"
+
+
+def generate_medical_response(prompt: str, tokenizer, model, device, max_new_tokens: int = 180) -> str:
+    """Generate a detailed medical response with safe fallback and query-length check."""
+    
+    # Step 0: Check if user query is too short
+    try:
+        user_query = prompt.split("Question:")[1].split("Answer:")[0].strip()
+        if len(user_query.split()) < 2:
+            return "Please enter a more detailed medical question for better results."
+        elif len(prompt.split()) < 2:
+            return "Please enter a more detailed medical question for better results."
+
     except:
-        return text
+        pass
 
-def generate_medical_response(prompt: str, tokenizer, model, device, max_new_tokens: int = 400) -> str:
-    """Generate medical response"""
-    inputs = tokenizer(prompt, return_tensors="pt").to(device)
-    outputs = model.generate(
-        **inputs,
-        max_new_tokens=max_new_tokens,
-        temperature=0.7,
-        top_p=0.95,
-        repetition_penalty=1.1,
-        do_sample=True,
-    )
-    response = tokenizer.decode(outputs[0], skip_special_tokens=True).strip()
-
-    if len(response.split()) < 25:
-        follow_up_prompt = f"{response}\n\nPlease elaborate with causes, symptoms, diagnosis, and treatments."
-        inputs = tokenizer(follow_up_prompt, return_tensors="pt").to(device)
+    try:
+        # Step 1: Initial generation
+        inputs = tokenizer(prompt, return_tensors="pt").to(device)
         outputs = model.generate(
             **inputs,
-            max_new_tokens=500,
+            max_new_tokens=max_new_tokens,
             temperature=0.7,
             top_p=0.95,
             repetition_penalty=1.1,
             do_sample=True,
         )
         response = tokenizer.decode(outputs[0], skip_special_tokens=True).strip()
-    return response
+
+        # Step 2: If response is too short, try elaborating
+        if len(response.split()) < 25:
+            follow_up_prompt = f"{response}\n\nPlease elaborate with causes, symptoms, diagnosis, and treatments."
+            inputs = tokenizer(follow_up_prompt, return_tensors="pt").to(device)
+            outputs = model.generate(
+                **inputs,
+                max_new_tokens=500,
+                temperature=0.7,
+                top_p=0.95,
+                repetition_penalty=1.1,
+                do_sample=True,
+            )
+            response = tokenizer.decode(outputs[0], skip_special_tokens=True).strip()
+
+    except Exception as e:
+        response = "Sorry, I cannot provide a response now. Please consult a medical professional."
+
+    return response.strip() 
+
+
 ```
 
 ---
@@ -230,7 +542,7 @@ def generate_medical_response(prompt: str, tokenizer, model, device, max_new_tok
 
 ```python
 # =======================================================
-#  Medical QA Fine-Tuning Script (Stable GPU Version C)
+#  Medical QA Fine-Tuning Script
 # =======================================================
 
 # 1️⃣ Install required packages
