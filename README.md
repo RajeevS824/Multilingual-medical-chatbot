@@ -1,6 +1,6 @@
 
 
-# 🩺 **Multilingual Medical Support Chatbot **
+# 🩺 **Multilingual Medical Support Chatbot**
 
 ### *Integrated Translation + Domain-Specific LLM Deployment*
     https://huggingface.co/spaces/Rajeev8248/medical-multilingual-chatbot
