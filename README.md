@@ -42,7 +42,6 @@ Build a **multilingual medical AI chatbot** that:
 * PubMedQA
 * HealthCareMagic QA
 * Medical conversational datasets
-* WHO & NIH Public medical literature
 
 ### **2. Translation Data**
 
