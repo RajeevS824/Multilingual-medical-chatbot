@@ -144,15 +144,15 @@ From Hugging Face translation datasets / MarianMT multilingual models.
 
 ## ⭐ **Key Features**
 
-✔ Multilingual input support
-✔ Automatic language detection
-✔ Medical-specific LLM response
-✔ Real-time translation
-✔ Chat-style interface
-✔ English response preview
-✔ Clean UI with custom CSS
-✔ Modular code structure
-✔ Fully deployable on HuggingFace / AWS
+✔ Multilingual input support<br>
+✔ Automatic language detection<br>
+✔ Medical-specific LLM response<br>
+✔ Real-time translation<br>
+✔ Chat-style interface<br>
+✔ English response preview<br>
+✔ Clean UI with custom CSS<br>
+✔ Modular code structure<br>
+✔ Fully deployable on HuggingFace / AWS<br>
 
 ---
 
@@ -224,13 +224,13 @@ Regional languages help bridge healthcare gaps.
 
 ## 🔮 **Future Enhancements**
 
-🚀 Add voice input & speech-to-speech translation
-🔍 Add OCR for scanning prescriptions
-🗂️ Connect to patient history / EMR (HIPAA compliant)
-🧠 Add RAG (Retrieval-Augmented Generation)
-📱 Deploy as mobile app
-🧪 Add symptoms-to-disease probability model
-🩺 Add emergency triaging (with disclaimers)
+🚀 Add voice input & speech-to-speech translation<br>
+🔍 Add OCR for scanning prescriptions<br>
+🗂️ Connect to patient history / EMR (HIPAA compliant)<br>
+🧠 Add RAG (Retrieval-Augmented Generation)<br>
+📱 Deploy as mobile app<br>
+🧪 Add symptoms-to-disease probability model<br>
+🩺 Add emergency triaging (with disclaimers)<br>
 
 ---
 
